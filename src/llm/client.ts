@@ -66,7 +66,7 @@ export async function researchWithPerplexity(
     messages: [
       {
         role: 'system',
-        content: 'You are a technical research assistant. Provide concise, accurate information with specific recommendations when applicable. Focus on current best practices and real-world solutions.',
+        content: 'You are a technical research assistant helping to plan software projects. Provide concise, actionable information about best practices, common patterns, and recommended approaches. Focus on practical implementation details.',
       },
       {
         role: 'user',
@@ -78,23 +78,60 @@ export async function researchWithPerplexity(
   return response.choices[0]?.message?.content || 'No response';
 }
 
-export async function research(
+export async function researchPRDContext(
   config: UserConfig,
-  query: string
-): Promise<{ response: string; provider: 'perplexity' | 'claude' }> {
-  if (config.researchProvider === 'perplexity' && config.perplexityApiKey) {
-    return {
-      response: await researchWithPerplexity(config, query),
-      provider: 'perplexity',
-    };
-  }
+  prdContent: string
+): Promise<string> {
+  // Extract key topics from the PRD to research - let Claude decide how many based on complexity
+  const extractionPrompt = `Analyze this PRD and identify the key technical topics that would benefit from research to help create better implementation tasks.
 
-  // Fall back to Claude
-  const response = await generateWithClaude(
+Consider the PRD's complexity when deciding how many topics to research:
+- Simple projects (single feature, familiar tech): 1-2 topics
+- Medium projects (multiple features, some new tech): 3-4 topics
+- Complex projects (many features, unfamiliar domains, integrations): 5-7 topics
+
+Focus on topics where current best practices, patterns, or gotchas would meaningfully improve task quality. Don't research basic/obvious things.
+
+PRD Content:
+${prdContent.substring(0, 6000)}
+
+Return a JSON object with your reasoning and topics:
+{
+  "complexity": "simple|medium|complex",
+  "reasoning": "Brief explanation of why you chose this complexity level",
+  "topics": ["research query 1", "research query 2", ...]
+}
+
+Only return the JSON object, nothing else.`;
+
+  const topicsResponse = await generateWithClaude(
     config,
-    'You are a technical research assistant. Provide concise, accurate information with specific recommendations when applicable.',
-    query
+    'You analyze PRDs to identify technical topics worth researching. Be selective - only include topics where research would genuinely improve implementation guidance.',
+    extractionPrompt,
+    800
   );
 
-  return { response, provider: 'claude' };
+  let topics: string[];
+  try {
+    const parsed = JSON.parse(topicsResponse.trim());
+    topics = parsed.topics || [];
+  } catch {
+    // Fallback if parsing fails
+    topics = ['software development best practices for the described project'];
+  }
+
+  // Research each topic with Perplexity
+  const researchResults: string[] = [];
+
+  for (const topic of topics) {
+    try {
+      const result = await researchWithPerplexity(config, topic);
+      researchResults.push(`## Research: ${topic}\n\n${result}`);
+    } catch (error) {
+      // Continue if one research query fails
+      console.warn(`Research failed for topic: ${topic}`);
+    }
+  }
+
+  return researchResults.join('\n\n---\n\n');
 }

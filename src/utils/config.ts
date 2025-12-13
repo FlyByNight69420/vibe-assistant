@@ -7,7 +7,6 @@ const CONFIG_DIR = path.join(os.homedir(), '.vibe-assistant');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
 
 const DEFAULT_CONFIG: UserConfig = {
-  researchProvider: 'perplexity',
   defaultAgent: 'claude-code',
   outputDir: 'docs/prd',
 };
@@ -58,20 +57,22 @@ export async function saveConfig(config: Partial<UserConfig>): Promise<void> {
   await fs.writeJson(CONFIG_FILE, configToSave, { spaces: 2 });
 }
 
-export function validateConfig(config: UserConfig): { valid: boolean; errors: string[] } {
+export function validateConfig(config: UserConfig): { valid: boolean; errors: string[]; warnings: string[] } {
   const errors: string[] = [];
+  const warnings: string[] = [];
 
   if (!config.anthropicApiKey) {
     errors.push('Anthropic API key is required. Set ANTHROPIC_API_KEY environment variable or run "vibe-assistant config".');
   }
 
-  if (config.researchProvider === 'perplexity' && !config.perplexityApiKey) {
-    errors.push('Perplexity API key is required for research. Set PERPLEXITY_API_KEY or switch to Claude for research.');
+  if (!config.perplexityApiKey) {
+    warnings.push('Perplexity API key not set. Research will be skipped. Set PERPLEXITY_API_KEY for better task generation.');
   }
 
   return {
     valid: errors.length === 0,
     errors,
+    warnings,
   };
 }
 

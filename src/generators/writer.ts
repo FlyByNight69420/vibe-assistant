@@ -4,17 +4,17 @@ import ora from 'ora';
 import { writeMarkdown, writeJson, ensureProjectDirs, getPaths } from '../utils/files.js';
 import { generateMainPRD, generatePhaseFile, generateInitialState } from './markdown.js';
 import { generateClaudeMd, generateAgentsMd, generateSlashCommands } from './agent-configs.js';
-import type { PRDDocument, UserConfig } from '../types.js';
+import type { ParsedPRD, UserConfig } from '../types.js';
 
 export async function writePRDFiles(
-  prd: PRDDocument,
+  prd: ParsedPRD,
   config: UserConfig,
   baseDir: string
 ): Promise<void> {
   const outputDir = config.outputDir;
   const paths = getPaths(baseDir, outputDir);
 
-  const spinner = ora('Writing PRD files...').start();
+  const spinner = ora('Writing task files...').start();
 
   try {
     // Ensure directories exist
@@ -25,11 +25,11 @@ export async function writePRDFiles(
     spinner.text = 'Wrote PRD.md';
 
     // Write phase files
-    for (const phase of prd.implementationRoadmap) {
+    for (const phase of prd.phases) {
       const phasePath = path.join(paths.phases, `phase-${phase.number}.md`);
       await writeMarkdown(phasePath, generatePhaseFile(phase, prd));
     }
-    spinner.text = `Wrote ${prd.implementationRoadmap.length} phase files`;
+    spinner.text = `Wrote ${prd.phases.length} phase files`;
 
     // Write initial state
     await writeJson(paths.state, generateInitialState(prd));
@@ -53,17 +53,17 @@ export async function writePRDFiles(
       spinner.text = 'Wrote AGENTS.md';
     }
 
-    spinner.succeed('All PRD files written successfully');
+    spinner.succeed('All task files written successfully');
 
     // Print summary
     console.log(chalk.cyan('\n📁 Generated Files:\n'));
     console.log(chalk.white(`  ${outputDir}/PRD.md`));
-    console.log(chalk.white(`  ${outputDir}/phases/ (${prd.implementationRoadmap.length} files)`));
+    console.log(chalk.white(`  ${outputDir}/phases/ (${prd.phases.length} files)`));
     console.log(chalk.white(`  docs/progress/state.json`));
 
     if (prd.projectInfo.targetAgent === 'claude-code' || prd.projectInfo.targetAgent === 'both') {
       console.log(chalk.white(`  CLAUDE.md`));
-      console.log(chalk.white(`  .claude/commands/ (5 slash commands)`));
+      console.log(chalk.white(`  .claude/commands/ (4 slash commands)`));
     }
 
     if (prd.projectInfo.targetAgent === 'codex' || prd.projectInfo.targetAgent === 'both') {
@@ -71,7 +71,7 @@ export async function writePRDFiles(
     }
 
   } catch (error) {
-    spinner.fail('Failed to write PRD files');
+    spinner.fail('Failed to write task files');
     throw error;
   }
 }

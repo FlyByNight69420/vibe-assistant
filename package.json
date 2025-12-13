@@ -1,12 +1,13 @@
 {
   "name": "vibe-assistant",
-  "version": "0.1.4",
-  "description": "AI-agent-optimized PRD generator using RPG methodology",
+  "version": "0.2.0",
+  "description": "Parse PRDs into structured tasks for AI coding agents like Claude Code",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "vibe-assistant": "dist/bin/vibe-assistant.js"
+    "vibe-assistant": "dist/bin/vibe-assistant.js",
+    "vibe-assistant-mcp": "dist/bin/vibe-assistant-mcp.js"
   },
   "scripts": {
     "build": "tsc",
@@ -19,12 +20,10 @@
     "prd",
     "ai",
     "claude",
+    "claude-code",
     "codex",
-    "rpg",
-    "project-planning",
-    "infrastructure-as-code",
-    "devops",
-    "ci-cd"
+    "task-parser",
+    "project-planning"
   ],
   "author": "Nick K <vibe-assistant@flybynight.io>",
   "license": "MIT",
@@ -42,12 +41,14 @@
   ],
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
     "fs-extra": "^11.2.0",
     "inquirer": "^12.2.0",
     "openai": "^4.77.0",
-    "ora": "^8.1.1"
+    "ora": "^8.1.1",
+    "zod": "^3.25.0"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",

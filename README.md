@@ -1,28 +1,28 @@
-# 🚀 vibe-assistant
+# vibe-assistant
 
-> **AI-powered PRD generator that writes docs your coding agent actually understands.**
+> **Parse your PRDs into structured tasks for AI coding agents like Claude Code.**
 
-Built with ❤️ in Auckland
+Built with love in Auckland
 
 [![npm version](https://img.shields.io/npm/v/vibe-assistant.svg)](https://www.npmjs.com/package/vibe-assistant)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-## ✨ What is this?
+## What is this?
 
-**vibe-assistant** generates Product Requirements Documents (PRDs) specifically designed for AI coding agents like **Claude Code** and **OpenAI Codex**.
+**vibe-assistant** takes your existing Product Requirements Document (PRD) and transforms it into a structured task breakdown that AI coding agents like **Claude Code** and **OpenAI Codex** can actually use.
 
-Using the **RPG methodology** (Repository Planning Graph) from Microsoft Research, it creates structured docs that help your AI assistant:
+Just give it your PRD file, and it creates:
 
-- 🧠 **Maintain context** across long coding sessions
-- 📋 **Work through tasks** in the right order
-- 🏗️ **Set up infrastructure** with zero manual config
-- 🔄 **Track progress** and pick up where it left off
+- Phased implementation roadmap with clear task dependencies
+- Progress tracking via `state.json`
+- Agent instruction files (`CLAUDE.md`, `AGENTS.md`)
+- Slash commands for workflow (`/next-task`, `/checkpoint`, etc.)
 
 ---
 
-## 🎬 Quick Start
+## Quick Start
 
 ```bash
 # Install globally
@@ -31,78 +31,57 @@ npm install -g vibe-assistant
 # Set your API key
 export ANTHROPIC_API_KEY=sk-ant-...
 
-# Generate a PRD!
+# Parse your PRD!
 cd your-project
 vibe-assistant init
 ```
 
-That's it! Answer the questions, and vibe-assistant will generate everything your AI coding agent needs.
+You'll be prompted for:
+1. Path to your PRD file (markdown, text, etc.)
+2. Project name (optional - auto-detected from PRD)
+3. Which AI agent you're using
+
+That's it! Claude parses your PRD and generates everything your AI coding agent needs to get started.
 
 ---
 
-## 🎯 Features
-
-| Feature | Description |
-|---------|-------------|
-| 💬 **Interactive Interview** | Guided Q&A to capture your vision |
-| 🏛️ **RPG Methodology** | Battle-tested structure from Microsoft Research |
-| ☁️ **Multi-Cloud Support** | AWS, GCP, Azure, Vercel, Railway, Fly.io, self-hosted |
-| 🔧 **Infrastructure as Code** | Terraform, Pulumi, CloudFormation, CDK specs |
-| 🚀 **CI/CD Pipelines** | GitHub Actions, GitLab CI, Jenkins configs |
-| 🐳 **Container Ready** | Docker & orchestration (Compose, K8s, ECS) |
-| 🤖 **Agent Configs** | CLAUDE.md + AGENTS.md for your AI |
-| ⚡ **Slash Commands** | `/next-task`, `/checkpoint`, `/phase-status` |
-| 🔍 **Research Integration** | Uses Perplexity or Claude to research best practices |
-| 📊 **Progress Tracking** | Never lose context, even across sessions |
-
----
-
-## 📦 What Gets Generated
+## What Gets Generated
 
 ```
 your-project/
-├── 📁 docs/
-│   ├── 📁 prd/
-│   │   ├── 📄 PRD.md              ← Main requirements doc
-│   │   ├── 📁 phases/
-│   │   │   ├── 📄 phase-1.md      ← Detailed task breakdowns
-│   │   │   ├── 📄 phase-2.md
-│   │   │   └── ...
-│   │   └── 📁 research/           ← Research findings
-│   └── 📁 progress/
-│       ├── 📄 state.json          ← Machine-readable progress
-│       └── 📄 phase-*-summary.md  ← Checkpoint summaries
+├── docs/
+│   ├── prd/
+│   │   ├── PRD.md              <- Task breakdown summary
+│   │   └── phases/
+│   │       ├── phase-1.md      <- Detailed task breakdowns
+│   │       ├── phase-2.md
+│   │       └── ...
+│   └── progress/
+│       ├── state.json          <- Machine-readable progress
+│       └── phase-*-summary.md  <- Checkpoint summaries
 │
-├── 📁 .claude/
-│   └── 📁 commands/
-│       ├── 📄 next-task.md        ← Get next task
-│       ├── 📄 checkpoint.md       ← Save progress
-│       ├── 📄 phase-status.md     ← Show completion
-│       └── 📄 research.md         ← Research a topic
+├── .claude/
+│   └── commands/
+│       ├── next-task.md        <- Get next task
+│       ├── checkpoint.md       <- Save progress
+│       ├── phase-status.md     <- Show completion
+│       └── check-issue.md      <- Bug vs not-implemented checker
 │
-├── 📄 CLAUDE.md                   ← Instructions for Claude Code
-└── 📄 AGENTS.md                   ← Instructions for Codex
+├── CLAUDE.md                   <- Instructions for Claude Code
+└── AGENTS.md                   <- Instructions for Codex
 ```
 
 ---
 
-## 🛠️ Commands
+## Commands
 
 ### `vibe-assistant init`
 
-Start a new PRD with an interactive interview.
+Parse a PRD file into structured tasks.
 
 ```bash
 vibe-assistant init
 ```
-
-You'll be asked about:
-- 📝 Project name & description
-- 👥 Target users
-- ✨ Core features
-- 🔧 Tech stack preferences
-- 🚀 Infrastructure & deployment
-- 🤖 Which AI agent you're using
 
 ### `vibe-assistant status`
 
@@ -113,7 +92,7 @@ vibe-assistant status
 ```
 
 ```
-📊 Project Status
+Project Status
 
 Current Phase: 2
 Last Updated: 12/13/2025, 10:30 AM
@@ -125,53 +104,83 @@ Overall Progress:
 
 ### `vibe-assistant update`
 
-Update an existing PRD with new requirements.
+Re-parse a PRD or regenerate task files.
 
 ```bash
 vibe-assistant update
 ```
 
 Options:
-- ➕ Add new features
-- ✏️ Modify existing requirements
-- 🔍 Add research findings
-- 🔄 Regenerate from scratch
+- Re-parse PRD (preserves progress for matching task IDs)
+- Regenerate from scratch
 
 ---
 
-## 🚀 Infrastructure Interview
+## MCP Server Integration
 
-During setup, you'll configure your entire deployment pipeline:
+vibe-assistant can run as an MCP (Model Context Protocol) server, allowing Claude Code to call it directly without shell commands.
 
-| Category | Options |
-|----------|---------|
-| **☁️ Hosting** | AWS, GCP, Azure, Vercel, Netlify, Railway, Fly.io, Self-hosted |
-| **🏠 Self-hosted** | Docker Compose, Kubernetes, Shell scripts, Systemd |
-| **📦 Repository** | GitHub, GitLab, Bitbucket |
-| **🔄 CI/CD** | GitHub Actions, GitLab CI, Jenkins, CircleCI |
-| **🏗️ IaC** | Terraform, Pulumi, CloudFormation, CDK, Bicep |
-| **🐳 Containers** | Docker + Compose, Kubernetes, ECS, Cloud Run |
-| **🌍 Environments** | Development, Staging, Production |
-| **🔐 Secrets** | AWS Secrets Manager, GCP Secret Manager, Vault, Doppler |
+### Setup
 
-Your PRD will include **bootstrap scripts** so you can go from zero to deployed with minimal commands!
+Add to your Claude Code MCP settings (`~/.claude/claude_desktop_config.json` or via Claude Code settings):
+
+```json
+{
+  "mcpServers": {
+    "vibe-assistant": {
+      "command": "npx",
+      "args": ["-y", "vibe-assistant-mcp"]
+    }
+  }
+}
+```
+
+Or if installed globally:
+```json
+{
+  "mcpServers": {
+    "vibe-assistant": {
+      "command": "vibe-assistant-mcp"
+    }
+  }
+}
+```
+
+### Available MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `parse_prd` | Parse a PRD file into structured tasks |
+| `get_status` | Get current project progress |
+| `get_next_task` | Get the next pending task |
+| `check_if_implemented` | Check if an issue is a bug or not implemented |
+
+### Example Usage
+
+Once configured, you can ask Claude:
+- "Parse my PRD at ./docs/requirements.md"
+- "What's the current project status?"
+- "What's the next task I should work on?"
+- "Is user authentication implemented yet?"
+
+Claude will call the appropriate MCP tool directly.
 
 ---
 
-## ⚡ Slash Commands
+## Slash Commands
 
 When using Claude Code, these commands help maintain context:
 
 | Command | What it does |
 |---------|--------------|
-| `/next-task` | 📋 Get the next task to work on |
-| `/checkpoint` | 💾 Save progress and create summary |
-| `/phase-status` | 📊 Show current phase completion |
-| `/research <topic>` | 🔍 Research a technical topic |
+| `/next-task` | Get the next task to work on |
+| `/checkpoint` | Save progress and create summary |
+| `/phase-status` | Show current phase completion |
+| `/check-issue <desc>` | Check if issue is bug or not implemented yet |
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 ### API Keys
 
@@ -195,44 +204,61 @@ vibe-assistant config --show
 
 | Flag | Description |
 |------|-------------|
-| `--set-anthropic-key <key>` | Set Claude API key |
-| `--set-perplexity-key <key>` | Set Perplexity API key |
-| `--set-research-provider <provider>` | `perplexity` or `claude` |
+| `--set-anthropic-key <key>` | Set Claude API key (required) |
+| `--set-perplexity-key <key>` | Set Perplexity API key (optional, for research) |
 | `--set-default-agent <agent>` | `claude-code`, `codex`, or `both` |
 
 ---
 
-## 📖 The RPG Methodology
+## The "Check Before Fixing" Feature
 
-The **Repository Planning Graph** methodology structures PRDs with:
+One of the most useful features is the `/check-issue` command and the guidance in `CLAUDE.md`.
 
-1. **📋 Overview** — Problem, users, success metrics
-2. **🧩 Functional Decomposition** — Capability domains and features
-3. **🏗️ Structural Decomposition** — Module organization
-4. **🔗 Dependency Graph** — Build order and dependencies
-5. **🗺️ Implementation Roadmap** — Phased tasks with entry/exit criteria
-6. **🧪 Test Strategy** — Testing requirements and coverage
-7. **🏛️ Architecture** — Technical decisions and rationale
-8. **🚀 Infrastructure** — Complete deployment automation
-9. **⚠️ Risks** — Risk assessment and mitigations
-10. **📎 Appendix** — Glossary, references, open questions
+When a user reports something "broken", the AI agent is instructed to:
+
+1. **Check `state.json`** - What phase are we on? What's completed?
+2. **Check the PRD** - Is this feature supposed to be implemented yet?
+3. **Determine verdict:**
+   - Feature in future phase? → Tell user "not implemented yet"
+   - Feature should be working? → Investigate the bug
+
+This prevents wasting time "fixing" things that simply haven't been built yet.
 
 ---
 
-## 🤝 Contributing
+## How It Works
+
+1. You provide your PRD (any text format - markdown, plain text, etc.)
+2. **Research step** (if Perplexity API key is set):
+   - Claude extracts key technical topics from your PRD
+   - Perplexity researches best practices for each topic
+   - Research results inform the task generation
+3. Claude analyzes the PRD and extracts:
+   - Project goals and summary
+   - Implementation phases with entry/exit criteria
+   - Individual tasks with dependencies
+   - Parallelization opportunities
+4. The structured output is saved as markdown files and JSON
+5. Your AI coding agent uses these files to work through the project systematically
+
+**Note:** The Perplexity research step is optional but recommended. It helps Claude create more informed tasks based on current best practices for your tech stack.
+
+---
+
+## Contributing
 
 Contributions welcome! Please feel free to submit a Pull Request.
 
 ---
 
-## 📄 License
+## License
 
 MIT © Nick K
 
 ---
 
 <p align="center">
-  <b>Built with ❤️ in Auckland, New Zealand</b>
+  <b>Built with love in Auckland, New Zealand</b>
   <br>
   <sub>Making AI coding agents actually useful since 2024</sub>
 </p>

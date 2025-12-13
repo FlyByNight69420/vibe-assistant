@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import path from 'path';
 import { loadConfig } from '../../utils/config.js';
 import { readJson, readMarkdown, getPaths, prdExists } from '../../utils/files.js';
-import type { ProgressState, PRDDocument } from '../../types.js';
+import type { ProgressState } from '../../types.js';
 
 interface StatusOptions {
   dir: string;

@@ -1,19 +1,19 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import ora from 'ora';
+import fs from 'fs/promises';
 import { loadConfig, validateConfig } from '../../utils/config.js';
 import { prdExists, readJson, getPaths } from '../../utils/files.js';
-import { generateWithClaude } from '../../llm/client.js';
+import { parsePRD } from '../../parsers/prd.js';
 import { writePRDFiles } from '../../generators/writer.js';
-import type { ProgressState, PRDDocument, ProjectInfo } from '../../types.js';
-import fs from 'fs-extra';
+import type { ProgressState } from '../../types.js';
 
 interface UpdateOptions {
   dir: string;
 }
 
 export async function updateCommand(options: UpdateOptions): Promise<void> {
-  console.log(chalk.cyan.bold('\n🔄 vibe-assistant - Update PRD\n'));
+  console.log(chalk.cyan.bold('\n🔄 vibe-assistant - Update Tasks\n'));
 
   const config = await loadConfig();
   const validation = validateConfig(config);
@@ -26,10 +26,10 @@ export async function updateCommand(options: UpdateOptions): Promise<void> {
 
   const paths = getPaths(options.dir, config.outputDir);
 
-  // Check if PRD exists
+  // Check if task files exist
   if (!(await prdExists(options.dir, config.outputDir))) {
-    console.log(chalk.yellow('\n⚠️  No PRD found in this directory.'));
-    console.log(chalk.gray('Run "vibe-assistant init" to create one.\n'));
+    console.log(chalk.yellow('\n⚠️  No task files found in this directory.'));
+    console.log(chalk.gray('Run "vibe-assistant init" to parse a PRD.\n'));
     return;
   }
 
@@ -49,11 +49,9 @@ export async function updateCommand(options: UpdateOptions): Promise<void> {
     {
       type: 'list',
       name: 'updateType',
-      message: 'What would you like to update?',
+      message: 'What would you like to do?',
       choices: [
-        { name: 'Add new features/requirements', value: 'add_features' },
-        { name: 'Modify existing requirements', value: 'modify' },
-        { name: 'Add research findings', value: 'research' },
+        { name: 'Re-parse PRD (update from new PRD file)', value: 'reparse' },
         { name: 'Regenerate from scratch (preserves nothing)', value: 'regenerate' },
       ],
     },
@@ -64,7 +62,7 @@ export async function updateCommand(options: UpdateOptions): Promise<void> {
       {
         type: 'confirm',
         name: 'confirm',
-        message: chalk.red('This will delete all existing PRD files. Are you sure?'),
+        message: chalk.red('This will delete all existing task files. Are you sure?'),
         default: false,
       },
     ]);
@@ -80,185 +78,59 @@ export async function updateCommand(options: UpdateOptions): Promise<void> {
     return;
   }
 
-  if (updateType === 'add_features') {
-    await handleAddFeatures(options.dir, config, paths);
-  } else if (updateType === 'modify') {
-    await handleModify(options.dir, config, paths);
-  } else if (updateType === 'research') {
-    await handleResearch(options.dir, config, paths);
+  if (updateType === 'reparse') {
+    await handleReparse(options.dir, config, paths, state);
   }
 }
 
-async function handleAddFeatures(
+async function handleReparse(
   baseDir: string,
   config: import('../../types.js').UserConfig,
-  paths: ReturnType<typeof getPaths>
+  paths: ReturnType<typeof getPaths>,
+  existingState: ProgressState | null
 ): Promise<void> {
-  const { newFeatures } = await inquirer.prompt([
+  const { prdPath } = await inquirer.prompt([
     {
-      type: 'editor',
-      name: 'newFeatures',
-      message: 'Describe the new features you want to add:',
+      type: 'input',
+      name: 'prdPath',
+      message: 'Enter the path to your updated PRD file:',
+      validate: async (input: string) => {
+        if (!input.trim()) {
+          return 'Please enter a file path';
+        }
+        try {
+          await fs.access(input);
+          return true;
+        } catch {
+          return `File not found: ${input}`;
+        }
+      },
     },
   ]);
 
-  if (!newFeatures.trim()) {
-    console.log(chalk.yellow('No features specified. Update cancelled.\n'));
-    return;
-  }
-
-  const spinner = ora('Updating PRD with new features...').start();
+  const spinner = ora('Re-parsing PRD...').start();
 
   try {
-    // Read existing PRD
-    const existingPRD = await fs.readFile(paths.prd, 'utf-8');
+    const prdContent = await fs.readFile(prdPath, 'utf-8');
+    const parsedPRD = await parsePRD(config, prdContent);
 
-    const prompt = `You are updating an existing PRD. Here is the current PRD:
-
-${existingPRD}
-
-The user wants to add these new features:
-${newFeatures}
-
-Generate an updated PRD that:
-1. Preserves all existing structure and completed work
-2. Adds the new features to the appropriate capability domains
-3. Adds new tasks to the implementation roadmap
-4. Updates dependencies as needed
-5. Adds any new risks or test requirements
-
-Output the complete updated PRD in the same JSON format as the original. Keep all existing task IDs and add new ones.`;
-
-    const response = await generateWithClaude(
-      config,
-      'You are an expert at updating PRDs. Preserve existing structure and add new requirements seamlessly.',
-      prompt,
-      8192
-    );
-
-    const jsonStr = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const updatedPRD: PRDDocument = JSON.parse(jsonStr);
-
-    // Preserve state for existing tasks
-    const state = await readJson<ProgressState>(paths.state);
-    if (state) {
-      for (const phase of updatedPRD.implementationRoadmap) {
+    // Preserve status for tasks that exist in both old and new PRD
+    if (existingState) {
+      for (const phase of parsedPRD.phases) {
         for (const task of phase.tasks) {
-          if (state.tasks[task.id]) {
-            task.status = state.tasks[task.id].status;
+          if (existingState.tasks[task.id]) {
+            task.status = existingState.tasks[task.id].status;
           }
         }
       }
     }
 
-    await writePRDFiles(updatedPRD, config, baseDir);
+    await writePRDFiles(parsedPRD, config, baseDir);
 
-    spinner.succeed('PRD updated successfully');
-    console.log(chalk.green('\n✅ New features added to PRD\n'));
+    spinner.succeed('PRD re-parsed successfully');
+    console.log(chalk.green('\n✅ Task files updated from new PRD\n'));
   } catch (error) {
-    spinner.fail('Failed to update PRD');
-    console.log(chalk.red(`Error: ${error instanceof Error ? error.message : 'Unknown error'}\n`));
-  }
-}
-
-async function handleModify(
-  baseDir: string,
-  config: import('../../types.js').UserConfig,
-  paths: ReturnType<typeof getPaths>
-): Promise<void> {
-  const { modifications } = await inquirer.prompt([
-    {
-      type: 'editor',
-      name: 'modifications',
-      message: 'Describe what you want to modify in the PRD:',
-    },
-  ]);
-
-  if (!modifications.trim()) {
-    console.log(chalk.yellow('No modifications specified. Update cancelled.\n'));
-    return;
-  }
-
-  const spinner = ora('Applying modifications...').start();
-
-  try {
-    const existingPRD = await fs.readFile(paths.prd, 'utf-8');
-
-    const prompt = `You are modifying an existing PRD. Here is the current PRD:
-
-${existingPRD}
-
-The user wants to make these modifications:
-${modifications}
-
-Generate an updated PRD that applies the requested changes while preserving the overall structure. Keep existing task IDs where possible.
-
-Output the complete updated PRD in JSON format.`;
-
-    const response = await generateWithClaude(
-      config,
-      'You are an expert at modifying PRDs. Apply changes carefully while preserving structure.',
-      prompt,
-      8192
-    );
-
-    const jsonStr = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const updatedPRD: PRDDocument = JSON.parse(jsonStr);
-
-    await writePRDFiles(updatedPRD, config, baseDir);
-
-    spinner.succeed('PRD modified successfully');
-    console.log(chalk.green('\n✅ Modifications applied to PRD\n'));
-  } catch (error) {
-    spinner.fail('Failed to modify PRD');
-    console.log(chalk.red(`Error: ${error instanceof Error ? error.message : 'Unknown error'}\n`));
-  }
-}
-
-async function handleResearch(
-  baseDir: string,
-  config: import('../../types.js').UserConfig,
-  paths: ReturnType<typeof getPaths>
-): Promise<void> {
-  const { researchTopic } = await inquirer.prompt([
-    {
-      type: 'input',
-      name: 'researchTopic',
-      message: 'What topic do you want to research?',
-    },
-  ]);
-
-  if (!researchTopic.trim()) {
-    console.log(chalk.yellow('No topic specified. Update cancelled.\n'));
-    return;
-  }
-
-  const spinner = ora(`Researching: ${researchTopic}...`).start();
-
-  try {
-    const { research } = await import('../../llm/client.js');
-    const { response, provider } = await research(config, researchTopic);
-
-    // Save research to file
-    const slug = researchTopic.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 50);
-    const researchPath = `${paths.research}/${slug}.md`;
-
-    const researchContent = `# Research: ${researchTopic}
-
-> Researched via ${provider} on ${new Date().toISOString()}
-
-${response}
-`;
-
-    await fs.ensureDir(paths.research);
-    await fs.writeFile(researchPath, researchContent, 'utf-8');
-
-    spinner.succeed(`Research saved to ${researchPath}`);
-    console.log(chalk.cyan('\n📄 Research Summary:\n'));
-    console.log(chalk.gray(response.substring(0, 500) + (response.length > 500 ? '...' : '')));
-    console.log();
-  } catch (error) {
-    spinner.fail('Research failed');
+    spinner.fail('Failed to re-parse PRD');
     console.log(chalk.red(`Error: ${error instanceof Error ? error.message : 'Unknown error'}\n`));
   }
 }

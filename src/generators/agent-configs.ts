@@ -1,15 +1,18 @@
-import type { PRDDocument } from '../types.js';
+import type { ParsedPRD } from '../types.js';
 
-export function generateClaudeMd(prd: PRDDocument, outputDir: string): string {
+export function generateClaudeMd(prd: ParsedPRD, outputDir: string): string {
   return `# ${prd.projectInfo.name}
 
 ## Project Overview
-${prd.overview.problemStatement}
+${prd.overview.summary}
+
+### Goals
+${prd.overview.goals.map((g) => `- ${g}`).join('\n')}
 
 ## Quick Start for Claude Code
 
 ### Before Starting Work
-1. **Read the PRD:** \`${outputDir}/PRD.md\`
+1. **Read the task breakdown:** \`${outputDir}/PRD.md\`
 2. **Check progress:** \`docs/progress/state.json\`
 3. **Read current phase:** \`${outputDir}/phases/phase-{N}.md\`
 
@@ -18,7 +21,6 @@ ${prd.overview.problemStatement}
 - \`/checkpoint\` - Save progress and create summary
 - \`/phase-status\` - Show current phase completion
 - \`/check-issue <description>\` - Check if an issue is a bug or just not implemented yet
-- \`/research <topic>\` - Research a technical topic
 
 ## CRITICAL: Before Fixing ANY Issue
 
@@ -28,7 +30,7 @@ When the user reports something "broken", "not working", or asks you to "fix" so
 
 1. **STOP** - Do not immediately try to fix it
 2. **Check \`docs/progress/state.json\`** - What phase are we on? What tasks are completed?
-3. **Check the PRD** - Is this feature supposed to be implemented yet?
+3. **Check the task breakdown** - Is this feature supposed to be implemented yet?
 4. **Determine if it's actually a bug or just not built yet:**
    - If the feature is in a FUTURE phase/task → Tell the user "This isn't implemented yet. It's scheduled for Phase X, Task Y. Would you like to continue with the current task or skip ahead to implement this?"
    - If the feature SHOULD be working → Then investigate and fix the bug
@@ -44,12 +46,11 @@ This prevents wasting time "fixing" things that simply haven't been built yet.
 - Work through phases sequentially (Phase 1 → Phase 2 → ...)
 - Complete all tasks in a phase before moving on
 - Run \`/checkpoint\` after completing each task
-- If blocked, use \`/research\` to investigate solutions
 - **Always verify current progress before attempting fixes**
 
 ### Context Retention
 When starting a new session or after a long break:
-1. Read \`${outputDir}/PRD.md\` sections 1-5
+1. Read \`${outputDir}/PRD.md\`
 2. Check \`docs/progress/state.json\` for current state
 3. Read the current phase file
 4. Review recent checkpoint summaries in \`docs/progress/\`
@@ -57,43 +58,39 @@ When starting a new session or after a long break:
 ### File Structure
 \`\`\`
 ${outputDir}/
-├── PRD.md              # Main requirements document
-├── phases/             # Detailed phase breakdowns
-│   ├── phase-1.md
-│   └── ...
-└── research/           # Research findings
+├── PRD.md              # Task breakdown document
+└── phases/             # Detailed phase breakdowns
+    ├── phase-1.md
+    └── ...
 
 docs/progress/
 ├── state.json          # Machine-readable progress
 └── phase-*-summary.md  # Human-readable checkpoints
 \`\`\`
 
-## Tech Stack
-${prd.architecture.techStackRationale}
-
-## Key Architecture Decisions
-${prd.architecture.decisions.map((d) => `- ${d}`).join('\n')}
-
 ## Current Phase Tasks
 See \`${outputDir}/phases/\` for detailed task breakdowns with dependencies.
 `;
 }
 
-export function generateAgentsMd(prd: PRDDocument, outputDir: string): string {
+export function generateAgentsMd(prd: ParsedPRD, outputDir: string): string {
   return `# ${prd.projectInfo.name} - Codex Agent Instructions
 
 ## Project Context
-${prd.overview.problemStatement}
+${prd.overview.summary}
+
+### Goals
+${prd.overview.goals.map((g) => `- ${g}`).join('\n')}
 
 ## CRITICAL: Before Fixing ANY Issue
 
-**ALWAYS check the PRD and progress state before attempting to fix anything.**
+**ALWAYS check the task breakdown and progress state before attempting to fix anything.**
 
 When the user reports something "broken", "not working", or asks you to "fix" something:
 
 1. **STOP** - Do not immediately try to fix it
 2. **Check \`docs/progress/state.json\`** - What phase are we on? What tasks are completed?
-3. **Check the PRD at \`${outputDir}/PRD.md\`** - Is this feature supposed to be implemented yet?
+3. **Check the task breakdown at \`${outputDir}/PRD.md\`** - Is this feature supposed to be implemented yet?
 4. **Determine if it's actually a bug or just not built yet:**
    - If the feature is in a FUTURE phase/task → Tell the user: "This isn't implemented yet. It's scheduled for Phase X, Task Y. Would you like to continue with the current task or skip ahead to implement this?"
    - If the feature SHOULD be working (task is completed) → Then investigate and fix the bug
@@ -108,7 +105,7 @@ This prevents wasting time "fixing" things that simply haven't been built yet.
 ## How to Work on This Project
 
 ### Initial Setup
-1. Read the full PRD at \`${outputDir}/PRD.md\`
+1. Read the full task breakdown at \`${outputDir}/PRD.md\`
 2. Review the current state in \`docs/progress/state.json\`
 3. Identify the current phase and pending tasks
 
@@ -125,31 +122,10 @@ This prevents wasting time "fixing" things that simply haven't been built yet.
 - Verify exit criteria before phase transition
 - Create a phase summary when completing a phase
 - **Always verify current progress before attempting any fixes**
-
-### Research Tasks
-Some tasks require research before implementation. These are marked with "Research Required" in the task description. Conduct the research and save findings to \`${outputDir}/research/\`.
-
-## Structural Overview
-
-### Module Organization
-${prd.structuralDecomposition.map((m) => `- **${m.name}** (\`${m.path}\`): ${m.description}`).join('\n')}
-
-### Dependency Layers
-${prd.dependencyGraph.map((layer) => `
-**${layer.name}**
-- Modules: ${layer.modules.join(', ')}
-- Depends on: ${layer.dependsOn.join(', ') || 'None'}`).join('\n')}
-
-## Success Criteria
-${prd.overview.successMetrics.map((m) => `- ${m}`).join('\n')}
-
-## Testing Requirements
-- Unit test coverage: ${prd.testStrategy.coverageTarget}%
-- Critical scenarios: ${prd.testStrategy.criticalScenarios.join(', ')}
 `;
 }
 
-export function generateSlashCommands(prd: PRDDocument, outputDir: string): Record<string, string> {
+export function generateSlashCommands(prd: ParsedPRD, outputDir: string): Record<string, string> {
   return {
     'next-task.md': `# Next Task
 
@@ -168,7 +144,6 @@ Show:
 - Task title
 - Task description
 - Dependencies (and their status)
-- Any research required
 `,
 
     'checkpoint.md': `# Checkpoint
@@ -229,32 +204,6 @@ Exit Criteria:
 \`\`\`
 `,
 
-    'research.md': `# Research
-
-Research a technical topic using available resources.
-
-## Usage
-\`/research <topic>\`
-
-## Instructions
-1. Take the topic provided after the command
-2. Search for relevant information about the topic
-3. Focus on:
-   - Best practices
-   - Common patterns
-   - Potential pitfalls
-   - Recommended approaches
-4. Save findings to \`${outputDir}/research/{topic-slug}.md\`
-5. Summarize key points for immediate use
-
-## Output Format
-Provide a concise summary with:
-- Key recommendations
-- Code examples if applicable
-- Links to resources
-- Things to avoid
-`,
-
     'check-issue.md': `# Check Issue
 
 Determine if a reported issue is an actual bug or simply a feature that hasn't been implemented yet.
@@ -272,7 +221,7 @@ Determine if a reported issue is an actual bug or simply a feature that hasn't b
 
 ## Analysis Steps
 1. **Identify the feature area** - What part of the system does this issue relate to?
-2. **Find the relevant task** - Search the PRD for tasks related to this feature
+2. **Find the relevant task** - Search the task breakdown for tasks related to this feature
 3. **Check task status** - Is the task completed, in-progress, or pending?
 4. **Make determination:**
    - If task is PENDING or doesn't exist yet → NOT A BUG, just not implemented
@@ -282,7 +231,7 @@ Determine if a reported issue is an actual bug or simply a feature that hasn't b
 \`\`\`
 Issue: {description}
 
-Related Feature: {feature name from PRD}
+Related Feature: {feature name}
 Related Task: {task-id} - {task title}
 Task Status: {completed|in_progress|pending}
 Current Phase: {N} | Task's Phase: {M}

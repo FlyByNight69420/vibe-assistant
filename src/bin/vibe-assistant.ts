@@ -15,18 +15,18 @@ const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf-
 
 program
   .name('vibe-assistant')
-  .description('AI-agent-optimized PRD generator using RPG methodology')
+  .description('Parse PRDs into structured tasks for AI coding agents like Claude Code')
   .version(pkg.version);
 
 program
   .command('init')
-  .description('Initialize a new PRD through interactive interview')
+  .description('Parse a PRD file into structured tasks for AI agents')
   .option('-d, --dir <directory>', 'Project directory', process.cwd())
   .action(initCommand);
 
 program
   .command('update')
-  .description('Update an existing PRD with new requirements')
+  .description('Re-parse a PRD or regenerate task files')
   .option('-d, --dir <directory>', 'Project directory', process.cwd())
   .action(updateCommand);
 
@@ -40,8 +40,7 @@ program
   .command('config')
   .description('Configure API keys and preferences')
   .option('--set-anthropic-key <key>', 'Set Anthropic API key')
-  .option('--set-perplexity-key <key>', 'Set Perplexity API key')
-  .option('--set-research-provider <provider>', 'Set research provider (perplexity or claude)')
+  .option('--set-perplexity-key <key>', 'Set Perplexity API key (optional, for research)')
   .option('--set-default-agent <agent>', 'Set default coding agent (claude-code, codex, or both)')
   .option('--show', 'Show current configuration')
   .action(configCommand);

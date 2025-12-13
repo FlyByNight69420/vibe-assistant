@@ -5,7 +5,6 @@ import type { UserConfig } from '../../types.js';
 interface ConfigOptions {
   setAnthropicKey?: string;
   setPerplexityKey?: string;
-  setResearchProvider?: string;
   setDefaultAgent?: string;
   show?: boolean;
 }
@@ -18,8 +17,7 @@ export async function configCommand(options: ConfigOptions): Promise<void> {
     console.log(chalk.gray(`Config file: ${getConfigPath()}\n`));
 
     console.log(`Anthropic API Key: ${config.anthropicApiKey ? chalk.green('✓ Set') : chalk.red('✗ Not set')}`);
-    console.log(`Perplexity API Key: ${config.perplexityApiKey ? chalk.green('✓ Set') : chalk.red('✗ Not set')}`);
-    console.log(`Research Provider: ${chalk.white(config.researchProvider)}`);
+    console.log(`Perplexity API Key: ${config.perplexityApiKey ? chalk.green('✓ Set') : chalk.yellow('○ Not set (optional)')}`);
     console.log(`Default Agent: ${chalk.white(config.defaultAgent)}`);
     console.log(`Output Directory: ${chalk.white(config.outputDir)}`);
 
@@ -39,15 +37,6 @@ export async function configCommand(options: ConfigOptions): Promise<void> {
   if (options.setPerplexityKey) {
     updates.perplexityApiKey = options.setPerplexityKey;
     console.log(chalk.green('✓ Perplexity API key updated'));
-  }
-
-  if (options.setResearchProvider) {
-    if (!['perplexity', 'claude'].includes(options.setResearchProvider)) {
-      console.log(chalk.red('✗ Invalid research provider. Use "perplexity" or "claude".'));
-      process.exit(1);
-    }
-    updates.researchProvider = options.setResearchProvider as 'perplexity' | 'claude';
-    console.log(chalk.green(`✓ Research provider set to ${options.setResearchProvider}`));
   }
 
   if (options.setDefaultAgent) {
