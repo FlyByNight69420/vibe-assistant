@@ -18,7 +18,7 @@ export async function conductInterview(config: UserConfig): Promise<ProjectInfo>
       type: 'editor',
       name: 'description',
       message: 'Describe your project in detail. What problem does it solve? What are the main features?',
-      waitForUseInput: false,
+      waitForUserInput: false,
     },
   ]);
 
