@@ -1,15 +1,22 @@
 #!/usr/bin/env node
 
 import { program } from 'commander';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import { initCommand } from '../cli/commands/init.js';
 import { updateCommand } from '../cli/commands/update.js';
 import { statusCommand } from '../cli/commands/status.js';
 import { configCommand } from '../cli/commands/config.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf-8'));
+
 program
   .name('vibe-assistant')
   .description('AI-agent-optimized PRD generator using RPG methodology')
-  .version('0.1.0');
+  .version(pkg.version);
 
 program
   .command('init')

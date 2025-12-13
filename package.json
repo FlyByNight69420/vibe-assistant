@@ -1,6 +1,6 @@
 {
   "name": "vibe-assistant",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "AI-agent-optimized PRD generator using RPG methodology",
   "type": "module",
   "main": "dist/index.js",
