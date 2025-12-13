@@ -63,7 +63,7 @@ export async function writePRDFiles(
 
     if (prd.projectInfo.targetAgent === 'claude-code' || prd.projectInfo.targetAgent === 'both') {
       console.log(chalk.white(`  CLAUDE.md`));
-      console.log(chalk.white(`  .claude/commands/ (4 slash commands)`));
+      console.log(chalk.white(`  .claude/commands/ (5 slash commands)`));
     }
 
     if (prd.projectInfo.targetAgent === 'codex' || prd.projectInfo.targetAgent === 'both') {
