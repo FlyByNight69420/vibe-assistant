@@ -1,5 +1,5 @@
-import type { UserConfig, ParsedPRD, Phase, Task } from '../types.js';
-import { generateWithClaude } from '../llm/client.js';
+import type { UserConfig, ParsedPRD, Phase, Task, ResearchResults } from '../types.js';
+import { generateWithClaude, formatResearchResults } from '../llm/client.js';
 
 const PARSE_SYSTEM_PROMPT = `You are an expert at analyzing Product Requirements Documents (PRDs) and extracting structured tasks for AI coding agents like Claude Code.
 
@@ -34,7 +34,7 @@ You MUST respond with valid JSON matching this exact schema:
         {
           "id": "phase1-task1",
           "title": "Task Title",
-          "description": "Detailed description of what to implement",
+          "description": "Detailed description of what to implement, including specific package versions where relevant",
           "dependencies": [],
           "parallelizable": true
         }
@@ -49,7 +49,13 @@ Important guidelines:
 - Later phases should build on earlier ones
 - Each task should be completable in a single focused session
 - Be specific about what files/components to create or modify
-- If research results are provided, use them to inform best practices and implementation approaches`;
+
+CRITICAL - When research results are provided:
+1. **Package Versions**: Use the EXACT versions specified in research. Include version numbers in task descriptions (e.g., "Install React 18.3.1", "Set up PostgreSQL 16.x")
+2. **Avoid Deprecated Tech**: If research lists deprecated packages, DO NOT include them. Use the suggested alternatives instead.
+3. **Task Breakdown**: Follow the suggested number of phases and tasks per phase from research guidance. Adjust only if the PRD clearly requires more/fewer divisions.
+4. **Critical Path**: Order phases according to the critical path identified in research. Build foundation components before dependent ones.
+5. **Best Practices**: Incorporate architectural patterns and practices from research into task descriptions.`;
 
 interface ParseResponse {
   projectName: string;
@@ -76,7 +82,7 @@ export async function parsePRD(
   config: UserConfig,
   prdContent: string,
   projectName?: string,
-  researchResults?: string
+  researchResults?: ResearchResults
 ): Promise<ParsedPRD> {
   let userPrompt = '';
 
@@ -87,7 +93,8 @@ export async function parsePRD(
   userPrompt += `PRD Content:\n${prdContent}`;
 
   if (researchResults) {
-    userPrompt += `\n\n---\n\nResearch Results (use these to inform best practices):\n${researchResults}`;
+    const formattedResearch = formatResearchResults(researchResults);
+    userPrompt += `\n\n---\n\n# Research Results (FOLLOW THESE GUIDELINES)\n\n${formattedResearch}`;
   }
 
   const response = await generateWithClaude(

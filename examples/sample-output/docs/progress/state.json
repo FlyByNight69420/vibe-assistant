@@ -1,0 +1,28 @@
+{
+  "currentPhase": 1,
+  "tasks": {
+    "phase1-task1": { "status": "completed", "completedAt": "2024-12-13T10:30:00Z" },
+    "phase1-task2": { "status": "completed", "completedAt": "2024-12-13T11:15:00Z" },
+    "phase1-task3": { "status": "in_progress" },
+    "phase1-task4": { "status": "pending" },
+    "phase2-task1": { "status": "pending" },
+    "phase2-task2": { "status": "pending" },
+    "phase2-task3": { "status": "pending" },
+    "phase3-task1": { "status": "pending" },
+    "phase3-task2": { "status": "pending" },
+    "phase3-task3": { "status": "pending" },
+    "phase3-task4": { "status": "pending" },
+    "phase4-task1": { "status": "pending" },
+    "phase4-task2": { "status": "pending" },
+    "phase4-task3": { "status": "pending" }
+  },
+  "checkpoints": [
+    {
+      "phase": 1,
+      "task": "phase1-task2",
+      "summary": "Database setup complete. Prisma connected to PostgreSQL.",
+      "createdAt": "2024-12-13T11:15:00Z"
+    }
+  ],
+  "lastUpdated": "2024-12-13T11:30:00Z"
+}

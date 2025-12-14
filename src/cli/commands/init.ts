@@ -8,6 +8,7 @@ import { prdExists } from '../../utils/files.js';
 import { parsePRD } from '../../parsers/prd.js';
 import { researchPRDContext } from '../../llm/client.js';
 import { writePRDFiles } from '../../generators/writer.js';
+import type { ResearchResults } from '../../types.js';
 
 interface InitOptions {
   dir: string;
@@ -24,22 +25,23 @@ async function readPRDFile(filePath: string): Promise<string> {
 }
 
 export async function initCommand(options: InitOptions): Promise<void> {
-  console.log(chalk.cyan.bold('\n📋 vibe-assistant - PRD Parser\n'));
+  console.log(chalk.blue.bold('\nvibe-assistant init\n'));
+  console.log(chalk.gray('Parse an existing PRD into structured tasks\n'));
 
   // Load and validate config
   const config = await loadConfig();
   const validation = validateConfig(config);
 
   if (!validation.valid) {
-    console.log(chalk.red('\n❌ Configuration Error:\n'));
+    console.log(chalk.red('\nConfiguration Error:\n'));
     validation.errors.forEach((err) => console.log(chalk.red(`  - ${err}`)));
-    console.log(chalk.gray('\nRun "vibe-assistant config" to set up your API keys.\n'));
+    console.log(chalk.gray('\nRun: vibe-assistant config --set-anthropic-key <key>'));
     process.exit(1);
   }
 
   // Show warnings
   if (validation.warnings.length > 0) {
-    validation.warnings.forEach((warn) => console.log(chalk.yellow(`⚠️  ${warn}`)));
+    validation.warnings.forEach((warn) => console.log(chalk.yellow(`Warning: ${warn}`)));
     console.log();
   }
 
@@ -112,13 +114,16 @@ export async function initCommand(options: InitOptions): Promise<void> {
 
   try {
     // Research step (if Perplexity is configured)
-    let researchResults: string | undefined;
+    let researchResults: ResearchResults | undefined;
 
     if (config.perplexityApiKey) {
-      const researchSpinner = ora('Researching best practices with Perplexity...').start();
+      const researchSpinner = ora('Researching technologies, versions, and best practices...').start();
       try {
         researchResults = await researchPRDContext(config, prdContent);
-        researchSpinner.succeed('Research complete');
+        researchSpinner.succeed(
+          `Research complete: ${researchResults.techStack?.length || 0} technologies, ` +
+          `${researchResults.versionInfo?.packages.length || 0} package versions`
+        );
       } catch (error) {
         researchSpinner.warn('Research failed, continuing without it');
       }
@@ -140,7 +145,7 @@ export async function initCommand(options: InitOptions): Promise<void> {
     await writePRDFiles(parsedPRD, config, options.dir);
 
     // Success message
-    console.log(chalk.green.bold('\n✅ PRD Parsed Successfully!\n'));
+    console.log(chalk.green.bold('\nPRD Parsed Successfully!\n'));
 
     console.log(chalk.white('Next steps:'));
     console.log(chalk.gray(`  1. Review the tasks at ${config.outputDir}/PRD.md`));

@@ -5,6 +5,7 @@ import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { initCommand } from '../cli/commands/init.js';
+import { createCommand } from '../cli/commands/create.js';
 import { updateCommand } from '../cli/commands/update.js';
 import { statusCommand } from '../cli/commands/status.js';
 import { configCommand } from '../cli/commands/config.js';
@@ -25,6 +26,12 @@ program
   .action(initCommand);
 
 program
+  .command('create')
+  .description('Create a PRD from a rough project idea')
+  .option('-d, --dir <directory>', 'Project directory', process.cwd())
+  .action(createCommand);
+
+program
   .command('update')
   .description('Re-parse a PRD or regenerate task files')
   .option('-d, --dir <directory>', 'Project directory', process.cwd())
@@ -42,6 +49,7 @@ program
   .option('--set-anthropic-key <key>', 'Set Anthropic API key')
   .option('--set-perplexity-key <key>', 'Set Perplexity API key (optional, for research)')
   .option('--set-default-agent <agent>', 'Set default coding agent (claude-code, codex, or both)')
+  .option('--set-model <model>', 'Set Claude model (default: claude-sonnet-4-5-20250929)')
   .option('--show', 'Show current configuration')
   .action(configCommand);
 

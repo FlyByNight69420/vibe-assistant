@@ -2,10 +2,13 @@ import chalk from 'chalk';
 import { loadConfig, saveConfig, getConfigPath } from '../../utils/config.js';
 import type { UserConfig } from '../../types.js';
 
+const DEFAULT_MODEL = 'claude-sonnet-4-5-20250929';
+
 interface ConfigOptions {
   setAnthropicKey?: string;
   setPerplexityKey?: string;
   setDefaultAgent?: string;
+  setModel?: string;
   show?: boolean;
 }
 
@@ -20,6 +23,7 @@ export async function configCommand(options: ConfigOptions): Promise<void> {
     console.log(`Perplexity API Key: ${config.perplexityApiKey ? chalk.green('✓ Set') : chalk.yellow('○ Not set (optional)')}`);
     console.log(`Default Agent: ${chalk.white(config.defaultAgent)}`);
     console.log(`Output Directory: ${chalk.white(config.outputDir)}`);
+    console.log(`Claude Model: ${chalk.white(config.claudeModel || DEFAULT_MODEL)}`);
 
     console.log(chalk.gray('\nEnvironment variables (override config file):'));
     console.log(`  ANTHROPIC_API_KEY: ${process.env.ANTHROPIC_API_KEY ? chalk.green('✓ Set') : chalk.gray('Not set')}`);
@@ -46,6 +50,11 @@ export async function configCommand(options: ConfigOptions): Promise<void> {
     }
     updates.defaultAgent = options.setDefaultAgent as 'claude-code' | 'codex' | 'both';
     console.log(chalk.green(`✓ Default agent set to ${options.setDefaultAgent}`));
+  }
+
+  if (options.setModel) {
+    updates.claudeModel = options.setModel;
+    console.log(chalk.green(`✓ Claude model set to ${options.setModel}`));
   }
 
   if (Object.keys(updates).length > 0) {

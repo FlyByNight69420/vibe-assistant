@@ -21,7 +21,7 @@ export async function writePRDFiles(
     await ensureProjectDirs(baseDir, outputDir);
 
     // Write main PRD
-    await writeMarkdown(paths.prd, generateMainPRD(prd));
+    await writeMarkdown(paths.prd, generateMainPRD(prd, outputDir));
     spinner.text = 'Wrote PRD.md';
 
     // Write phase files
