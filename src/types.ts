@@ -57,6 +57,18 @@ export interface ParsedPRD {
   };
   phases: Phase[];
   totalTasks: number;
+  techStack?: TechStackInfo;
+}
+
+// Tech stack information for init.sh generation
+export interface TechStackInfo {
+  language: 'javascript' | 'typescript' | 'python' | 'go' | 'rust' | 'ruby' | 'java' | 'other';
+  packageManager?: 'npm' | 'yarn' | 'pnpm' | 'pip' | 'poetry' | 'pipenv' | 'cargo' | 'bundler' | 'maven' | 'gradle' | 'go';
+  framework?: string;  // e.g., 'nextjs', 'django', 'fastapi', 'rails', 'express', etc.
+  hasDocker?: boolean;
+  devCommand?: string;  // Custom dev command if known, e.g., 'npm run dev', 'python manage.py runserver'
+  buildCommand?: string;
+  testCommand?: string;
 }
 
 // Research results - structured output from Perplexity research

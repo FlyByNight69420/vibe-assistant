@@ -1,4 +1,4 @@
-import type { UserConfig, ParsedPRD, Phase, Task, ResearchResults } from '../types.js';
+import type { UserConfig, ParsedPRD, Phase, Task, ResearchResults, TechStackInfo } from '../types.js';
 import { generateWithClaude, formatResearchResults } from '../llm/client.js';
 
 const PARSE_SYSTEM_PROMPT = `You are an expert at analyzing Product Requirements Documents (PRDs) and extracting structured tasks for AI coding agents like Claude Code.
@@ -23,6 +23,15 @@ You MUST respond with valid JSON matching this exact schema:
   "description": "string - brief project description",
   "summary": "string - 1-2 sentence summary of what the project does",
   "goals": ["string array of main project goals"],
+  "techStack": {
+    "language": "javascript|typescript|python|go|rust|ruby|java|other",
+    "packageManager": "npm|yarn|pnpm|pip|poetry|pipenv|cargo|bundler|maven|gradle|go",
+    "framework": "string or null (e.g., 'nextjs', 'django', 'fastapi', 'rails', 'express')",
+    "hasDocker": true|false,
+    "devCommand": "string or null (e.g., 'npm run dev', 'python manage.py runserver')",
+    "buildCommand": "string or null",
+    "testCommand": "string or null"
+  },
   "phases": [
     {
       "number": 1,
@@ -50,6 +59,12 @@ Important guidelines:
 - Each task should be completable in a single focused session
 - Be specific about what files/components to create or modify
 
+Tech Stack Guidelines:
+- Infer the primary language and package manager from the PRD content
+- Identify the main framework being used (if any)
+- Set hasDocker to true if the PRD mentions Docker, containers, or docker-compose
+- Provide sensible defaults for devCommand, buildCommand, testCommand based on the stack
+
 CRITICAL - When research results are provided:
 1. **Package Versions**: Use the EXACT versions specified in research. Include version numbers in task descriptions (e.g., "Install React 18.3.1", "Set up PostgreSQL 16.x")
 2. **Avoid Deprecated Tech**: If research lists deprecated packages, DO NOT include them. Use the suggested alternatives instead.
@@ -62,6 +77,15 @@ interface ParseResponse {
   description: string;
   summary: string;
   goals: string[];
+  techStack?: {
+    language: TechStackInfo['language'];
+    packageManager?: TechStackInfo['packageManager'];
+    framework?: string;
+    hasDocker?: boolean;
+    devCommand?: string;
+    buildCommand?: string;
+    testCommand?: string;
+  };
   phases: {
     number: number;
     name: string;
@@ -138,6 +162,20 @@ export async function parsePRD(
 
   const totalTasks = phases.reduce((sum, p) => sum + p.tasks.length, 0);
 
+  // Build tech stack info if provided
+  let techStack: TechStackInfo | undefined;
+  if (parsed.techStack) {
+    techStack = {
+      language: parsed.techStack.language,
+      packageManager: parsed.techStack.packageManager,
+      framework: parsed.techStack.framework || undefined,
+      hasDocker: parsed.techStack.hasDocker,
+      devCommand: parsed.techStack.devCommand || undefined,
+      buildCommand: parsed.techStack.buildCommand || undefined,
+      testCommand: parsed.techStack.testCommand || undefined,
+    };
+  }
+
   return {
     projectInfo: {
       name: projectName || parsed.projectName,
@@ -150,5 +188,6 @@ export async function parsePRD(
     },
     phases,
     totalTasks,
+    techStack,
   };
 }

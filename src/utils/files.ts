@@ -61,8 +61,11 @@ export function getPaths(baseDir: string, outputDir: string) {
     architecture: path.join(baseDir, outputDir, 'architecture'),
     progress: path.join(baseDir, 'docs', 'progress'),
     state: path.join(baseDir, 'docs', 'progress', 'state.json'),
+    tasksJson: path.join(baseDir, 'docs', 'progress', 'tasks.json'),
+    progressLog: path.join(baseDir, 'docs', 'progress', 'progress.txt'),
     claudeMd: path.join(baseDir, 'CLAUDE.md'),
     agentsMd: path.join(baseDir, 'AGENTS.md'),
     slashCommands: path.join(baseDir, '.claude', 'commands'),
+    initScript: path.join(baseDir, 'init.sh'),
   };
 }

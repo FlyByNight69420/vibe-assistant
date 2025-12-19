@@ -6,7 +6,7 @@ import {
   researchProjectComplexity,
   formatResearchResults,
 } from '../llm/client.js';
-import type { UserConfig, ParsedPRD, ResearchResults, DeploymentConfig } from '../types.js';
+import type { UserConfig, ParsedPRD, ResearchResults, DeploymentConfig, TechStackInfo } from '../types.js';
 import { DEPLOYMENT_DESCRIPTIONS } from '../types.js';
 
 const EXPAND_IDEA_PROMPT = `You are an expert product manager and technical architect. Your job is to take a rough project idea and expand it into a comprehensive Product Requirements Document (PRD).
@@ -65,6 +65,15 @@ You MUST respond with valid JSON matching this exact schema:
     "summary": "string (2-3 sentences)",
     "goals": ["goal1", "goal2", ...]
   },
+  "techStack": {
+    "language": "javascript|typescript|python|go|rust|ruby|java|other",
+    "packageManager": "npm|yarn|pnpm|pip|poetry|pipenv|cargo|bundler|maven|gradle|go",
+    "framework": "string or null (e.g., 'nextjs', 'django', 'fastapi', 'rails', 'express')",
+    "hasDocker": true|false,
+    "devCommand": "string or null (e.g., 'npm run dev', 'python manage.py runserver')",
+    "buildCommand": "string or null",
+    "testCommand": "string or null"
+  },
   "phases": [
     {
       "number": 1,
@@ -97,6 +106,12 @@ Guidelines:
 - Each phase should have clear entry/exit criteria
 - Aim for 3-7 tasks per phase
 - Aim for 3-5 phases total for most projects
+
+Tech Stack Guidelines:
+- Infer the primary language and package manager from the PRD content
+- Identify the main framework being used (if any)
+- Set hasDocker to true if the PRD mentions Docker, containers, or docker-compose
+- Provide sensible defaults for devCommand, buildCommand, testCommand based on the stack
 
 Only return the JSON object, nothing else.`;
 
