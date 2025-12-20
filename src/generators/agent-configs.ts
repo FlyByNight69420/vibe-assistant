@@ -164,6 +164,71 @@ init.sh                 # Development environment startup script
 
 ---
 
+## Context Management
+
+Claude Code has a 200K token context window. When working on large tasks:
+
+- **Use \`/clear\`** to reset the conversation when context gets cluttered
+- **Use \`/compact\`** to summarize progress and continue with a smaller context
+- Monitor context usage - if responses slow down or quality drops, consider clearing
+
+**When to clear context:**
+- After completing a major task or phase
+- When switching between unrelated parts of the codebase
+- If Claude starts "forgetting" earlier instructions
+
+---
+
+## Visual Debugging
+
+For UI/frontend work, **use screenshots** for debugging:
+- Take screenshots of UI issues and share them
+- Claude can analyze visual bugs that aren't apparent from code alone
+- Especially useful for CSS, layout, and responsive design issues
+
+If **Puppeteer MCP** or browser automation is available:
+- Use it to capture screenshots programmatically
+- Automate visual regression testing
+- Verify UI changes across different states
+
+---
+
+## Keyboard Shortcuts & Tips
+
+- **Press Escape once** - Interject and redirect Claude while it's working
+- **Press Escape twice** - Jump back into the conversation after interrupting
+- **Shift+Tab** - Toggle auto-accept mode for faster workflows (use with caution)
+
+---
+
+## Parallel Work
+
+You can run **multiple Claude Code instances** simultaneously:
+- Work on independent features in parallel
+- One instance for implementation, another for testing
+- Different terminals for frontend vs backend work
+
+Ensure parallel work doesn't conflict:
+- Work on different files/modules
+- Coordinate through git branches if needed
+- Use the progress files to avoid duplicate work
+
+---
+
+## MCP Server Integration
+
+Claude Code can be extended with **MCP (Model Context Protocol) servers**:
+
+- **Puppeteer MCP** - Browser automation for E2E testing and screenshots
+- **Database MCPs** - Direct database access for debugging
+- **API MCPs** - Integration with external services
+- **Custom MCPs** - Build project-specific tooling
+
+Check available MCP servers with your Claude Code installation.
+Well-documented CLI tools (like GitHub's \`gh\` command) also extend capabilities.
+
+---
+
 ## Current Phase Tasks
 See \`${outputDir}/phases/\` for detailed task breakdowns with dependencies.
 `;
@@ -298,6 +363,61 @@ init.sh                 # Development environment startup script
 **IMPORTANT:** Use \`docs/progress/tasks.json\` for authoritative task status.
 - JSON format is corruption-resistant (models are less likely to incorrectly modify it)
 - Never edit task descriptions in this file - only update status fields
+
+---
+
+## Context Management
+
+When working on large tasks, be mindful of context limits:
+
+- Clear conversation history when context gets cluttered
+- Summarize progress before continuing with fresh context
+- If responses slow down or quality drops, consider resetting
+
+**When to reset context:**
+- After completing a major task or phase
+- When switching between unrelated parts of the codebase
+- If the agent starts "forgetting" earlier instructions
+
+---
+
+## Visual Debugging
+
+For UI/frontend work, **use screenshots** for debugging:
+- Take screenshots of UI issues and share them
+- Agents can analyze visual bugs that aren't apparent from code alone
+- Especially useful for CSS, layout, and responsive design issues
+
+If browser automation is available:
+- Use it to capture screenshots programmatically
+- Automate visual regression testing
+- Verify UI changes across different states
+
+---
+
+## Parallel Work
+
+You can run **multiple agent instances** simultaneously:
+- Work on independent features in parallel
+- One instance for implementation, another for testing
+- Different terminals for frontend vs backend work
+
+Ensure parallel work doesn't conflict:
+- Work on different files/modules
+- Coordinate through git branches if needed
+- Use the progress files to avoid duplicate work
+
+---
+
+## CLI Tool Integration
+
+Extend agent capabilities with well-documented CLI tools:
+- **GitHub CLI (\`gh\`)** - PR creation, issue management, workflow runs
+- **Docker CLI** - Container management and debugging
+- **Database CLIs** - Direct database queries for debugging
+- **Cloud CLIs** - AWS, GCP, Azure management
+
+The more tools available, the more the agent can accomplish autonomously.
 `;
 }
 
